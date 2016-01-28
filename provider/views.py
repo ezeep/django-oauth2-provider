@@ -378,7 +378,7 @@ class AccessToken(OAuthView, Mixin):
     """
 
     grant_types = ['authorization_code', 'refresh_token', 'password',
-                   'client_credentials']
+                   'client_credentials', 'client_credentials_b']
     """
     The default grant types supported by this view.
     """
@@ -560,6 +560,22 @@ class AccessToken(OAuthView, Mixin):
 
         return self.access_token_response(at)
 
+    def client_credentials_b(self, request, data, client):
+        """
+        Handle grant_type=client_credentials_b, as the client_credentials handle is not
+        implementing the oauth2 spec correctly
+        """
+        data = self.get_client_credentials_b_grant(request, data, client)
+        scope = data.get('scope')
+        user = client.user
+
+        if constants.SINGLE_ACCESS_TOKEN:
+            at = self.get_access_token(request, user, scope, client)
+        else:
+            at = self.create_access_token(request, user, scope, client)
+
+        return self.access_token_response(at)
+
     def get_handler(self, grant_type):
         """
         Return a function or method that is capable handling the ``grant_type``
@@ -574,6 +590,8 @@ class AccessToken(OAuthView, Mixin):
             return self.password
         elif grant_type == 'client_credentials':
             return self.client_credentials
+        elif grant_type == 'client_credentials_b':
+            return self.client_credentials_b
         return None
 
     def get(self, request):

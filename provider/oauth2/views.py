@@ -102,6 +102,12 @@ class AccessTokenView(AccessTokenView):
             raise OAuthError({'error': 'user must be authenticated'})
         return form.cleaned_data
 
+    def get_client_credentials_b_grant(self, request, data, client):
+        form = ClientCredentialsForm(data, client=client)
+        if not form.is_valid():
+            raise  OAuthError(form.errors)
+        return form.cleaned_data
+
     def get_access_token(self, request, user, scope, client):
         try:
             # Attempt to fetch an existing access token.
